@@ -7,8 +7,8 @@ from uuid import uuid4
 import jinja2
 #import torch
 from cog import BasePredictor, ConcatenateIterator, Input
-from vllm import LLMEngine
-from vllm.engine.arg_utils import EngineArgs
+from vllm import AsyncLLMEngine
+from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
 
 import prompt_templates
@@ -87,7 +87,7 @@ class Predictor(BasePredictor):
         for key, value in self.config._asdict().items():
             print(f"{key}: {value}")
 
-        engine_args = EngineArgs(
+        engine_args = AsyncEngineArgs(
             dtype="auto",
             quantization="fbgemm_fp8",
             tensor_parallel_size=8, #max(torch.cuda.device_count(), 1),
@@ -96,7 +96,7 @@ class Predictor(BasePredictor):
             max_model_len=4096,
         )
 
-        self.engine = LLMEngine.from_engine_args(
+        self.engine = AsyncLLMEngine.from_engine_args(
             engine_args
         )  # pylint: disable=attribute-defined-outside-init
 
@@ -214,7 +214,7 @@ class Predictor(BasePredictor):
         generator = self.engine.generate(prompt, sampling_params, request_id)
         start = 0
 
-        for result in generator:
+        async for result in generator:
             assert (
                 len(result.outputs) == 1
             ), "Expected exactly one output from generation request."
