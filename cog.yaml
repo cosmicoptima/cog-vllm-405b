@@ -10,7 +10,7 @@ build:
   python_packages:
     - jinja2
   run:
-    - --mount=type=cache,target=/root/.cache/pip TORCH_CUDA_ARCH_LIST="9.0" CUDA_HOME=/usr/local/cuda pip install --ignore-installed \
+    - --mount=type=cache,target=/root/.cache/pip TORCH_CUDA_ARCH_LIST="8.0" CUDA_HOME=/usr/local/cuda pip install --ignore-installed \
       git+https://github.com/huggingface/transformers.git@main \
       git+https://github.com/vllm-project/vllm@main \
       accelerate
