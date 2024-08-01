@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from typing import NamedTuple, Optional
+from typing import Any, Dict, Iterator, NamedTuple, Optional, Union
 from uuid import uuid4
 
 import jinja2
@@ -151,6 +151,7 @@ class Predictor(BasePredictor):
         ),
         presence_penalty: float = Input(description="Presence penalty", default=0.0),
         frequency_penalty: float = Input(description="Frequency penalty", default=0.0),
+        logprobs: int = Input(description="The number of logprobs to return for each token.", default=0),
         stop_sequences: str = Input(
             description="A comma-separated list of sequences to stop generation at. For example, '<end>,<stop>' will stop generation at the first instance of 'end' or '<stop>'.",
             default=None,
@@ -159,7 +160,7 @@ class Predictor(BasePredictor):
             description="A template to format the prompt with. If not provided, the default prompt template will be used.",
             default=None,
         ),
-    ) -> ConcatenateIterator[str]:
+    ) -> Union[ConcatenateIterator[str], Iterator[Dict[str, Any]]]:
         start = time.time()
 
         if prompt_template:
@@ -201,6 +202,7 @@ class Predictor(BasePredictor):
             stop_token_ids=[self.tokenizer.eos_token_id],
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
+            logprobs=None if logprobs == 0 else logprobs,
             use_beam_search=False,
         )
         if isinstance(stop_sequences, str) and stop_sequences:
@@ -212,7 +214,8 @@ class Predictor(BasePredictor):
 
         request_id = uuid4().hex
         generator = self.engine.generate(prompt, sampling_params, request_id)
-        start = 0
+        text_start = 0
+        logprob_start = 0
 
         async for result in generator:
             assert (
@@ -224,9 +227,13 @@ class Predictor(BasePredictor):
             # Normalize text by removing any incomplete surrogate pairs (common with emojis)
             text = text.replace("\N{REPLACEMENT CHARACTER}", "")
 
-            yield text[start:]
+            if result.outputs[0].logprobs:
+                yield {"text": text[text_start:], "logprobs": result.outputs[0].logprobs[logprob_start:]}
+            else:
+                yield text[text_start:]
 
             start = len(text)
+            logprob_start = len(result.outputs[0].logprobs)
 
         self.log(f"Generation took {time.time() - start:.2f}s")
         self.log(f"Formatted prompt: {prompt}")
