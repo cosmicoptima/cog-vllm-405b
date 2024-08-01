@@ -63,7 +63,7 @@ def format_prompt(
         raise UserError(
             f"E1004 PromptTemplateError: Prompt template must be a valid python format spec: {repr(e)}"
         )
-    
+
 class Predictor(BasePredictor):
     async def setup(self):
         weights = "https://weights.replicate.delivery/default/hf/meta-llama/llama-3.1-405b-instruct-fp8-revised3.tar"
@@ -232,7 +232,7 @@ class Predictor(BasePredictor):
             else:
                 yield text[text_start:]
 
-            start = len(text)
+            text_start = len(text)
             logprob_start = len(result.outputs[0].logprobs)
 
         self.log(f"Generation took {time.time() - start:.2f}s")
