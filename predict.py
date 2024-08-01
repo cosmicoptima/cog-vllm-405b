@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from typing import Any, AsyncIterator, Dict, NamedTuple, Optional, Union
+from typing import Any, NamedTuple, Optional
 from uuid import uuid4
 
 import jinja2
@@ -160,7 +160,7 @@ class Predictor(BasePredictor):
             description="A template to format the prompt with. If not provided, the default prompt template will be used.",
             default=None,
         ),
-    ) -> Union[ConcatenateIterator[str], AsyncIterator[Dict[str, Any]]]:
+    ) -> Any:
         start = time.time()
 
         if prompt_template:
