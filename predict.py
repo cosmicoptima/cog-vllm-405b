@@ -66,7 +66,7 @@ def format_prompt(
 
 class Predictor(BasePredictor):
     async def setup(self):
-        weights = "https://weights.replicate.delivery/default/hf/meta-llama/llama-3.1-405b-instruct-fp8-revised3.tar"
+        weights = "https://weights.replicate.delivery/default/hf/meta-llama/llama-3.1-405b-fp8.tar"
 
         weights = await resolve_model_path(str(weights))
 
@@ -105,22 +105,6 @@ class Predictor(BasePredictor):
             if hasattr(self.engine.engine.tokenizer, "tokenizer")
             else self.engine.engine.tokenizer
         )  # pylint: disable=attribute-defined-outside-init
-
-        if self.config.prompt_template:
-            print(
-                f"Using prompt template from `predictor_config.json`: {self.config.prompt_template}"
-            )
-            self.tokenizer.chat_template = self.config.prompt_template
-
-        elif self.tokenizer.chat_template:
-            print(
-                f"Using prompt template from `tokenizer`: {self.tokenizer.chat_template}"
-            )
-        else:
-            print(
-                f"No prompt template specified in `predictor_config.json` or `tokenizer`, defaulting to: {PROMPT_TEMPLATE}"
-            )
-            self.tokenizer.chat_template = PROMPT_TEMPLATE
 
     async def predict(  # pylint: disable=invalid-overridden-method, arguments-differ
         self,
@@ -161,35 +145,6 @@ class Predictor(BasePredictor):
         ),
     ) -> ConcatenateIterator[str]:
         start = time.time()
-
-        if prompt_template:
-            prompt = format_prompt(
-                prompt=prompt,
-                prompt_template=prompt_template,
-                system_prompt=system_prompt,
-            )
-
-        elif self.tokenizer.chat_template:
-            system_prompt = "" if system_prompt is None else system_prompt
-            try:
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ]
-                prompt = self.tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True
-                )
-            except jinja2.exceptions.TemplateError:
-                messages = [
-                    {"role": "user", "content": "\n\n".join([system_prompt, prompt])}
-                ]
-                prompt = self.tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True
-                )
-        elif system_prompt:
-            self.log(
-                "Warning: ignoring system prompt because no chat template was configured"
-            )
 
         sampling_params = SamplingParams(
             n=1,
