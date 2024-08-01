@@ -187,7 +187,7 @@ class Predictor(BasePredictor):
             else:
                 yield text[text_start:]
 
-            start = len(text)
+            text_start = len(text)
             logprob_start = len(result.outputs[0].logprobs)
 
         self.log(f"Generation took {time.time() - start:.2f}s")
