@@ -146,6 +146,7 @@ class Predictor(BasePredictor):
         ),
     ) -> Any:
         start = time.time()
+        self.log("Starting prediction")
 
         sampling_params = SamplingParams(
             n=1,
