@@ -162,6 +162,7 @@ class Predictor(BasePredictor):
         ),
     ) -> Any:
         start = time.time()
+        self.log("Starting prediction")
 
         if prompt_template:
             prompt = format_prompt(
