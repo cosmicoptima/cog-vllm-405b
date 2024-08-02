@@ -184,11 +184,11 @@ class Predictor(BasePredictor):
 
             if result.outputs[0].logprobs:
                 yield {"text": text[text_start:], "logprobs": result.outputs[0].logprobs[logprob_start:]}
+                logprob_start = len(result.outputs[0].logprobs)
             else:
                 yield text[text_start:]
 
             text_start = len(text)
-            logprob_start = len(result.outputs[0].logprobs)
 
         self.log(f"Generation took {time.time() - start:.2f}s")
         self.log(f"Formatted prompt: {prompt}")
